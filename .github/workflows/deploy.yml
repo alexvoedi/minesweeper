@@ -13,3 +13,4 @@ jobs:
       with:
         username: 'alexvoedi'
         reponame: 'minesweeper'
+        token: ${{ secrets.GITHUB_TOKEN }}
