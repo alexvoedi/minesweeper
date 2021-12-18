@@ -143,7 +143,6 @@
 <script lang="ts">
 import { computed, defineComponent, reactive, ref } from "vue";
 import { mdiBomb } from "@mdi/js";
-import SvgIcon from "@jamescoyle/vue-icon";
 
 interface Cell {
   id: number;
@@ -154,10 +153,6 @@ interface Cell {
 }
 
 export default defineComponent({
-  components: {
-    SvgIcon,
-  },
-
   setup() {
     const settings = reactive({
       w: 9,
