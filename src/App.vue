@@ -203,7 +203,7 @@ export default defineComponent({
     }));
 
     const openCell = (cell: Cell) => {
-      if (cell.open) return;
+      if (cell.open || cell.marked) return;
 
       cell.open = true;
 
@@ -214,18 +214,19 @@ export default defineComponent({
         timer.value.id = setInterval(tick, 10);
       }
 
+      if (cell.mine) {
+        clearTimeout(timer.value.id);
+        openAllCells();
+        gameOver.value = true;
+        return;
+      }
+
       const adjacentCells = getAdjacentCells(cell);
 
       const adjacentCellsWithMines = adjacentCells.filter((cell) => cell.mine);
 
       if (adjacentCellsWithMines.length === 0) {
         adjacentCells.forEach((cell) => openCell(cell));
-      }
-
-      if (cell.mine) {
-        clearTimeout(timer.value.id);
-        openAllCells();
-        gameOver.value = true;
       }
 
       checkWinCondition();
