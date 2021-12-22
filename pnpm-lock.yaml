@@ -1,7 +1,6 @@
 lockfileVersion: 5.3
 
 specifiers:
-  '@jamescoyle/vue-icon': ^0.1.2
   '@mdi/js': ^6.5.95
   '@vitejs/plugin-vue': ^2.0.1
   '@vue/compiler-sfc': ^3.2.26
@@ -15,7 +14,6 @@ specifiers:
   vue-tsc: ^0.29.8
 
 dependencies:
-  '@jamescoyle/vue-icon': 0.1.2
   '@mdi/js': 6.5.95
   daisyui: 1.16.6
   vue: 3.2.26
@@ -81,10 +79,6 @@ packages:
   /@emmetio/scanner/1.0.0:
     resolution: {integrity: sha512-8HqW8EVqjnCmWXVpqAOZf+EGESdkR27odcMMMGefgKXtar00SoYNSryGv//TELI4T3QFsECo78p+0lmalk/CFA==}
     dev: true
-
-  /@jamescoyle/vue-icon/0.1.2:
-    resolution: {integrity: sha512-KFrImXx5TKIi6iQXlnyLEBl4rNosNKbTeRnr70ucTdUaciVmd9qK9d/pZAaKt1Ob/8xNnX2GMp8LisyHdKtEgw==}
-    dev: false
 
   /@mdi/js/6.5.95:
     resolution: {integrity: sha512-x/bwEoAGP+Mo10Dfk5audNIPi7Yz8ZBrILcbXLW3ShOI/njpgodzpgpC2WYK3D2ZSC392peRRemIFb/JsyzzYQ==}

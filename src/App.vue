@@ -101,11 +101,9 @@
                   </template>
                 </template>
                 <template v-else>
-                  <svg-icon
-                    color="darkred"
-                    type="mdi"
-                    :path="mdiBomb"
-                  ></svg-icon>
+                  <span color="darkred">
+                    💣
+                  </span>
                 </template>
               </span>
             </button>
