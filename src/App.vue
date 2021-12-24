@@ -140,7 +140,6 @@
 
 <script lang="ts">
 import { computed, defineComponent, reactive, ref } from "vue";
-import { mdiBomb } from "@mdi/js";
 
 interface Cell {
   id: number;
