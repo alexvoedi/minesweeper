@@ -365,7 +365,6 @@ export default defineComponent({
       markCell,
       gridStyle,
       getAdjacentCellsMineCount,
-      mdiBomb,
       gameOver,
       highlightSurroundingCells,
       openSurroundingCells,
