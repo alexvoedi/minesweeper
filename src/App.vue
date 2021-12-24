@@ -82,7 +82,12 @@
         >
           <template v-for="(cell, index) in cells" :key="index">
             <button
-              class="btn btn-sm btn-square rounded-none transition-none border-gray-500"
+              class="
+                btn btn-sm btn-square
+                rounded-none
+                transition-none
+                border-gray-500
+              "
               :class="{
                 open: cell.open,
                 marked: cell.marked,
@@ -101,9 +106,7 @@
                   </template>
                 </template>
                 <template v-else>
-                  <span text="color-red-500">
-                    💣
-                  </span>
+                  <span text="color-red-500"> 💣 </span>
                 </template>
               </span>
             </button>
@@ -138,8 +141,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent, reactive, ref } from "vue";
+<script setup lang="ts">
+import { computed, reactive, ref } from "vue";
 
 interface Cell {
   id: number;
@@ -149,230 +152,211 @@ interface Cell {
   highlight: boolean;
 }
 
-export default defineComponent({
-  setup() {
-    const settings = reactive({
-      w: 9,
-      h: 9,
-      mines: 10,
-    });
-
-    const cells = ref<Cell[]>([]);
-    const firstCell = ref<boolean>(true);
-    const gameOver = ref<boolean>(false);
-    const timer = ref<{
-      id: number,
-      start: Date,
-      current: Date,
-      elapsed: number,
-    }>({
-      id: 0,
-      start: new Date(),
-      current: new Date(),
-      elapsed: 0,
-    });
-
-    const initGame = (w: number, h: number, mines: number) => {
-      Object.assign(settings, { w, h, mines });
-
-      firstCell.value = true;
-      gameOver.value = false;
-
-      timer.value.start = new Date();
-      timer.value.current = new Date();
-      timer.value.elapsed = 0;
-
-      cells.value = [];
-      for (let i = 0; i < settings.w; i++) {
-        for (let j = 0; j < settings.h; j++) {
-          cells.value[j * settings.w + i] = {
-            id: j * settings.w + i,
-            open: false,
-            mine: false,
-            marked: false,
-            highlight: false,
-          };
-        }
-      }
-    };
-
-    const checkWinCondition = () => {
-      const openCells = cells.value.filter((cell) => cell.open);
-
-      if (openCells.length === (settings.w * settings.h - settings.mines)) {
-        clearInterval(timer.value.id);
-        openAllCells();
-      }
-    };
-
-    const gridStyle = computed(() => ({
-      gridTemplateColumns: `repeat(${settings.w}, min-content)`,
-      gridTemplateRows: `repeat(${settings.h}, min-content)`,
-    }));
-
-    const openCell = (cell: Cell) => {
-      if (cell.open || cell.marked) return;
-
-      cell.open = true;
-
-      if (firstCell.value) {
-        populateMines();
-
-        timer.value.start = new Date();
-        timer.value.id = setInterval(tick, 10);
-      }
-
-      if (cell.mine) {
-        clearTimeout(timer.value.id);
-        openAllCells();
-        gameOver.value = true;
-        return;
-      }
-
-      const adjacentCells = getAdjacentCells(cell);
-
-      const adjacentCellsWithMines = adjacentCells.filter((cell) => cell.mine);
-
-      if (adjacentCellsWithMines.length === 0) {
-        adjacentCells.forEach((cell) => openCell(cell));
-      }
-
-      checkWinCondition();
-    };
-
-    const tick = () => {
-      timer.value.current = new Date();
-      timer.value.elapsed =
-        timer.value.current.getTime() - timer.value.start.getTime();
-    };
-
-    const populateMines = () => {
-      firstCell.value = false;
-
-      const closedCells = cells.value.filter((cell) => !cell.open);
-
-      let i = 0;
-
-      while (i < settings.mines) {
-        const randomCell =
-          closedCells[Math.floor(Math.random() * closedCells.length)];
-
-        if (!randomCell.mine) {
-          randomCell.mine = true;
-          i++;
-        }
-      }
-    };
-
-    const openAllCells = () => {
-      cells.value.forEach((cell) => (cell.open = true));
-    };
-
-    const markCell = (cell: Cell) => {
-      if (cell.open) return;
-
-      cell.marked = !cell.marked;
-    };
-
-    const getAdjacentCells = (cell: Cell) => {
-      const adjacentCells: Cell[] = [];
-
-      const x = cell.id % settings.w;
-      const y = Math.floor(cell.id / settings.w);
-
-      for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-          if (
-            (i !== 0 || j !== 0) &&
-            x + i >= 0 &&
-            x + i < settings.w &&
-            y + j >= 0 &&
-            y + j < settings.h
-          ) {
-            const cell = getCell(x + i, y + j);
-
-            adjacentCells.push(cell);
-          }
-        }
-      }
-
-      return adjacentCells;
-    };
-
-    const markedCellsCount = computed(
-      () => cells.value.filter((cell) => cell.marked).length
-    );
-
-    const getAdjacentCellsMineCount = (cell: Cell) => {
-      const adjacentCells = getAdjacentCells(cell);
-
-      const adjacentCellsWithMines = adjacentCells.filter((cell) => cell.mine);
-
-      return adjacentCellsWithMines.length;
-    };
-
-    const getCell = (x: number, y: number): Cell => {
-      return cells.value[y * settings.w + x];
-    };
-
-    const highlightSurroundingCells = (cell: Cell) => {
-      const adjacentCells = getAdjacentCells(cell);
-
-      adjacentCells
-        .filter((cell) => !cell.marked)
-        .forEach((cell) => (cell.highlight = true));
-    };
-
-    const openSurroundingCells = (cell: Cell) => {
-      cells.value.forEach((cell) => (cell.highlight = false));
-
-      if (!cell.open) return;
-
-      const adjacentCells = getAdjacentCells(cell);
-
-      const markedAdjacentCells = adjacentCells.filter(
-        (cell) => cell.marked && !cell.open
-      );
-      const adjacentCellsWithMines = adjacentCells.filter((cell) => cell.mine);
-
-      if (markedAdjacentCells.length === adjacentCellsWithMines.length) {
-        const x = cell.id % settings.w;
-        const y = Math.floor(cell.id / settings.w);
-
-        for (let i = -1; i <= 1; i++) {
-          for (let j = -1; j <= 1; j++) {
-            if (
-              (i !== 0 || j !== 0) &&
-              x + i >= 0 &&
-              x + i < settings.w &&
-              y + j >= 0 &&
-              y + j < settings.h
-            ) {
-              const cell = getCell(x + i, y + j);
-
-              if (!cell.marked && !cell.open) openCell(cell);
-            }
-          }
-        }
-      }
-    };
-
-    return {
-      initGame,
-      cells,
-      settings,
-      openCell,
-      markCell,
-      gridStyle,
-      getAdjacentCellsMineCount,
-      gameOver,
-      highlightSurroundingCells,
-      openSurroundingCells,
-      timer,
-      markedCellsCount,
-    };
-  },
+const settings = reactive({
+  w: 9,
+  h: 9,
+  mines: 10,
 });
+
+const cells = ref<Cell[]>([]);
+const firstCell = ref<boolean>(true);
+const gameOver = ref<boolean>(false);
+const timer = ref<{
+  id: number;
+  start: Date;
+  current: Date;
+  elapsed: number;
+}>({
+  id: 0,
+  start: new Date(),
+  current: new Date(),
+  elapsed: 0,
+});
+
+const initGame = (w: number, h: number, mines: number) => {
+  Object.assign(settings, { w, h, mines });
+
+  firstCell.value = true;
+  gameOver.value = false;
+
+  timer.value.start = new Date();
+  timer.value.current = new Date();
+  timer.value.elapsed = 0;
+
+  cells.value = [];
+  for (let i = 0; i < settings.w; i++) {
+    for (let j = 0; j < settings.h; j++) {
+      cells.value[j * settings.w + i] = {
+        id: j * settings.w + i,
+        open: false,
+        mine: false,
+        marked: false,
+        highlight: false,
+      };
+    }
+  }
+};
+
+const checkWinCondition = () => {
+  const openCells = cells.value.filter((cell) => cell.open);
+
+  if (openCells.length === settings.w * settings.h - settings.mines) {
+    clearInterval(timer.value.id);
+    openAllCells();
+  }
+};
+
+const gridStyle = computed(() => ({
+  gridTemplateColumns: `repeat(${settings.w}, min-content)`,
+  gridTemplateRows: `repeat(${settings.h}, min-content)`,
+}));
+
+const openCell = (cell: Cell) => {
+  if (cell.open || cell.marked) return;
+
+  cell.open = true;
+
+  if (firstCell.value) {
+    populateMines();
+
+    timer.value.start = new Date();
+    timer.value.id = setInterval(tick, 10);
+  }
+
+  if (cell.mine) {
+    clearTimeout(timer.value.id);
+    openAllCells();
+    gameOver.value = true;
+    return;
+  }
+
+  const adjacentCells = getAdjacentCells(cell);
+
+  const adjacentCellsWithMines = adjacentCells.filter((cell) => cell.mine);
+
+  if (adjacentCellsWithMines.length === 0) {
+    adjacentCells.forEach((cell) => openCell(cell));
+  }
+
+  checkWinCondition();
+};
+
+const tick = () => {
+  timer.value.current = new Date();
+  timer.value.elapsed =
+    timer.value.current.getTime() - timer.value.start.getTime();
+};
+
+const populateMines = () => {
+  firstCell.value = false;
+
+  const closedCells = cells.value.filter((cell) => !cell.open);
+
+  let i = 0;
+
+  while (i < settings.mines) {
+    const randomCell =
+      closedCells[Math.floor(Math.random() * closedCells.length)];
+
+    if (!randomCell.mine) {
+      randomCell.mine = true;
+      i++;
+    }
+  }
+};
+
+const openAllCells = () => {
+  cells.value.forEach((cell) => (cell.open = true));
+};
+
+const markCell = (cell: Cell) => {
+  if (cell.open) return;
+
+  cell.marked = !cell.marked;
+};
+
+const getAdjacentCells = (cell: Cell) => {
+  const adjacentCells: Cell[] = [];
+
+  const x = cell.id % settings.w;
+  const y = Math.floor(cell.id / settings.w);
+
+  for (let i = -1; i <= 1; i++) {
+    for (let j = -1; j <= 1; j++) {
+      if (
+        (i !== 0 || j !== 0) &&
+        x + i >= 0 &&
+        x + i < settings.w &&
+        y + j >= 0 &&
+        y + j < settings.h
+      ) {
+        const cell = getCell(x + i, y + j);
+
+        adjacentCells.push(cell);
+      }
+    }
+  }
+
+  return adjacentCells;
+};
+
+const markedCellsCount = computed(
+  () => cells.value.filter((cell) => cell.marked).length
+);
+
+const getAdjacentCellsMineCount = (cell: Cell) => {
+  const adjacentCells = getAdjacentCells(cell);
+
+  const adjacentCellsWithMines = adjacentCells.filter((cell) => cell.mine);
+
+  return adjacentCellsWithMines.length;
+};
+
+const getCell = (x: number, y: number): Cell => {
+  return cells.value[y * settings.w + x];
+};
+
+const highlightSurroundingCells = (cell: Cell) => {
+  const adjacentCells = getAdjacentCells(cell);
+
+  adjacentCells
+    .filter((cell) => !cell.marked)
+    .forEach((cell) => (cell.highlight = true));
+};
+
+const openSurroundingCells = (cell: Cell) => {
+  cells.value.forEach((cell) => (cell.highlight = false));
+
+  if (!cell.open) return;
+
+  const adjacentCells = getAdjacentCells(cell);
+
+  const markedAdjacentCells = adjacentCells.filter(
+    (cell) => cell.marked && !cell.open
+  );
+  const adjacentCellsWithMines = adjacentCells.filter((cell) => cell.mine);
+
+  if (markedAdjacentCells.length === adjacentCellsWithMines.length) {
+    const x = cell.id % settings.w;
+    const y = Math.floor(cell.id / settings.w);
+
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
+        if (
+          (i !== 0 || j !== 0) &&
+          x + i >= 0 &&
+          x + i < settings.w &&
+          y + j >= 0 &&
+          y + j < settings.h
+        ) {
+          const cell = getCell(x + i, y + j);
+
+          if (!cell.marked && !cell.open) openCell(cell);
+        }
+      }
+    }
+  }
+};
 </script>
 
 <style lang="postcss" scoped>
