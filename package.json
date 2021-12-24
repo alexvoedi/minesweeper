@@ -6,7 +6,6 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "@mdi/js": "^6.5.95",
     "daisyui": "^1.19.0",
     "vue": "^3.2.0"
   },

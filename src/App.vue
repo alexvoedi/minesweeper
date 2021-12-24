@@ -73,7 +73,7 @@
 
       <div class="mx-auto">
         <div
-          class="grid gap-0.5 items-center justify-items-center cursor-pointer"
+          class="grid items-center justify-items-center cursor-pointer"
           :style="gridStyle"
           @click.prevent=""
           @mousedown.middle.prevent=""
@@ -82,7 +82,7 @@
         >
           <template v-for="(cell, index) in cells" :key="index">
             <button
-              class="btn btn-sm btn-square rounded-none transition-none"
+              class="btn btn-sm btn-square rounded-none transition-none border-gray-500"
               :class="{
                 open: cell.open,
                 marked: cell.marked,
@@ -101,7 +101,7 @@
                   </template>
                 </template>
                 <template v-else>
-                  <span color="darkred">
+                  <span text="color-red-500">
                     💣
                   </span>
                 </template>
@@ -161,10 +161,15 @@ export default defineComponent({
     const cells = ref<Cell[]>([]);
     const firstCell = ref<boolean>(true);
     const gameOver = ref<boolean>(false);
-    const timer = ref<any>({
-      id: null,
-      start: null,
-      current: null,
+    const timer = ref<{
+      id: number,
+      start: Date,
+      current: Date,
+      elapsed: number,
+    }>({
+      id: 0,
+      start: new Date(),
+      current: new Date(),
       elapsed: 0,
     });
 
@@ -173,6 +178,10 @@ export default defineComponent({
 
       firstCell.value = true;
       gameOver.value = false;
+
+      timer.value.start = new Date();
+      timer.value.current = new Date();
+      timer.value.elapsed = 0;
 
       cells.value = [];
       for (let i = 0; i < settings.w; i++) {
@@ -191,7 +200,7 @@ export default defineComponent({
     const checkWinCondition = () => {
       const openCells = cells.value.filter((cell) => cell.open);
 
-      if (openCells.length === settings.w * settings.h - settings.mines) {
+      if (openCells.length === (settings.w * settings.h - settings.mines)) {
         clearInterval(timer.value.id);
         openAllCells();
       }
