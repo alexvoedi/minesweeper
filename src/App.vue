@@ -95,7 +95,13 @@ interface Cell {
   highlight: boolean;
 }
 
-const settings = reactive({
+interface Settings {
+  width: number;
+  height: number;
+  mines: number;
+}
+
+const settings = reactive<Settings>({
   width: 9,
   height: 9,
   mines: 10,
@@ -116,7 +122,7 @@ const timer = ref<{
   elapsed: 0,
 });
 
-const initGame = ({ width, height, mines}: { width: number, height: number, mines: number}) => {
+const initGame = ({ width, height, mines }: Settings) => {
   Object.assign(settings, { width, height, mines });
 
   firstCell.value = true;
@@ -127,10 +133,10 @@ const initGame = ({ width, height, mines}: { width: number, height: number, mine
   timer.value.elapsed = 0;
 
   cells.value = [];
-  for (let i = 0; i < settings.width; i++) {
-    for (let j = 0; j < settings.height; j++) {
-      cells.value[j * settings.width + i] = {
-        id: j * settings.width + i,
+  for (let i = 0; i < width; i++) {
+    for (let j = 0; j < height; j++) {
+      cells.value[j * width + i] = {
+        id: j * width + i,
         open: false,
         mine: false,
         marked: false,
@@ -143,7 +149,7 @@ const initGame = ({ width, height, mines}: { width: number, height: number, mine
 const checkWinCondition = () => {
   const openCells = cells.value.filter((cell) => cell.open);
 
-  if (openCells.length === settings.width * settings.height - settings.mines) {
+  if (openCells.length === (settings.width * settings.height - settings.mines)) {
     clearInterval(timer.value.id);
     openAllCells();
   }
