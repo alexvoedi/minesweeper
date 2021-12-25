@@ -109,6 +109,9 @@
                   <span text="color-red-500"> 💣 </span>
                 </template>
               </span>
+              <span v-else-if="cell.marked" class="">
+                🚩
+              </span>
             </button>
           </template>
         </div>
@@ -361,7 +364,7 @@ const openSurroundingCells = (cell: Cell) => {
 
 <style lang="postcss" scoped>
 .marked {
-  @apply bg-red-800 border-red-800 hover:bg-red-800 hover:border-red-800;
+  @apply bg-red-800 hover:bg-red-800;
 }
 
 .highlight {
