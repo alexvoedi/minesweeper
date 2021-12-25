@@ -8,68 +8,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-4 gap-5">
-        <button
-          class="
-            btn btn-primary
-            transform
-            hover:shadow-md
-            btn-block
-            block
-            h-auto
-            py-3
-          "
-          @click="initGame(9, 9, 10)"
-        >
-          <div>Beginner</div>
-          <div class="font-light normal-case">9x9 - 10 Mines</div>
-        </button>
-        <button
-          class="
-            btn btn-primary
-            transform
-            hover:shadow-md
-            btn-block
-            block
-            h-auto
-            py-3
-          "
-          @click="initGame(16, 16, 40)"
-        >
-          <div>Intermediate</div>
-          <div class="font-light normal-case">16x16 - 40 Mines</div>
-        </button>
-        <button
-          class="
-            btn btn-primary
-            transform
-            hover:shadow-md
-            btn-block
-            block
-            h-auto
-            py-3
-          "
-          @click="initGame(30, 16, 99)"
-        >
-          <div>Expert</div>
-          <div class="font-light normal-case">30x16 - 99 Mines</div>
-        </button>
-        <button
-          class="
-            btn btn-secondary
-            transform
-            hover:shadow-md
-            btn-block
-            block
-            h-auto
-            py-3
-          "
-          disabled
-        >
-          <div>Custom</div>
-          <div class="font-light normal-case">Define your own game</div>
-        </button>
-      </div>
+      <DifficultyButtons @init-game="initGame"></DifficultyButtons>
 
       <div class="mx-auto">
         <div
@@ -146,6 +85,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from "vue";
+import DifficultyButtons from './components/DifficultyButtons.vue';
 
 interface Cell {
   id: number;
@@ -156,8 +96,8 @@ interface Cell {
 }
 
 const settings = reactive({
-  w: 9,
-  h: 9,
+  width: 9,
+  height: 9,
   mines: 10,
 });
 
@@ -176,8 +116,8 @@ const timer = ref<{
   elapsed: 0,
 });
 
-const initGame = (w: number, h: number, mines: number) => {
-  Object.assign(settings, { w, h, mines });
+const initGame = ({ width, height, mines}: { width: number, height: number, mines: number}) => {
+  Object.assign(settings, { width, height, mines });
 
   firstCell.value = true;
   gameOver.value = false;
@@ -187,10 +127,10 @@ const initGame = (w: number, h: number, mines: number) => {
   timer.value.elapsed = 0;
 
   cells.value = [];
-  for (let i = 0; i < settings.w; i++) {
-    for (let j = 0; j < settings.h; j++) {
-      cells.value[j * settings.w + i] = {
-        id: j * settings.w + i,
+  for (let i = 0; i < settings.width; i++) {
+    for (let j = 0; j < settings.height; j++) {
+      cells.value[j * settings.width + i] = {
+        id: j * settings.width + i,
         open: false,
         mine: false,
         marked: false,
@@ -203,15 +143,15 @@ const initGame = (w: number, h: number, mines: number) => {
 const checkWinCondition = () => {
   const openCells = cells.value.filter((cell) => cell.open);
 
-  if (openCells.length === settings.w * settings.h - settings.mines) {
+  if (openCells.length === settings.width * settings.height - settings.mines) {
     clearInterval(timer.value.id);
     openAllCells();
   }
 };
 
 const gridStyle = computed(() => ({
-  gridTemplateColumns: `repeat(${settings.w}, min-content)`,
-  gridTemplateRows: `repeat(${settings.h}, min-content)`,
+  gridTemplateColumns: `repeat(${settings.width}, min-content)`,
+  gridTemplateRows: `repeat(${settings.height}, min-content)`,
 }));
 
 const openCell = (cell: Cell) => {
@@ -281,17 +221,17 @@ const markCell = (cell: Cell) => {
 const getAdjacentCells = (cell: Cell) => {
   const adjacentCells: Cell[] = [];
 
-  const x = cell.id % settings.w;
-  const y = Math.floor(cell.id / settings.w);
+  const x = cell.id % settings.width;
+  const y = Math.floor(cell.id / settings.width);
 
   for (let i = -1; i <= 1; i++) {
     for (let j = -1; j <= 1; j++) {
       if (
         (i !== 0 || j !== 0) &&
         x + i >= 0 &&
-        x + i < settings.w &&
+        x + i < settings.width &&
         y + j >= 0 &&
-        y + j < settings.h
+        y + j < settings.height
       ) {
         const cell = getCell(x + i, y + j);
 
@@ -316,7 +256,7 @@ const getAdjacentCellsMineCount = (cell: Cell) => {
 };
 
 const getCell = (x: number, y: number): Cell => {
-  return cells.value[y * settings.w + x];
+  return cells.value[y * settings.width + x];
 };
 
 const highlightSurroundingCells = (cell: Cell) => {
@@ -340,17 +280,17 @@ const openSurroundingCells = (cell: Cell) => {
   const adjacentCellsWithMines = adjacentCells.filter((cell) => cell.mine);
 
   if (markedAdjacentCells.length === adjacentCellsWithMines.length) {
-    const x = cell.id % settings.w;
-    const y = Math.floor(cell.id / settings.w);
+    const x = cell.id % settings.width;
+    const y = Math.floor(cell.id / settings.width);
 
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
         if (
           (i !== 0 || j !== 0) &&
           x + i >= 0 &&
-          x + i < settings.w &&
+          x + i < settings.width &&
           y + j >= 0 &&
-          y + j < settings.h
+          y + j < settings.height
         ) {
           const cell = getCell(x + i, y + j);
 
