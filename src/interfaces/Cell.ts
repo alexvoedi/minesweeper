@@ -1,7 +1,9 @@
+import { CellState } from './CellState';
+
 export interface Cell {
-  id: number;
-  open: boolean;
+  x: number;
+  y: number;
   mine: boolean;
-  marked: boolean;
   highlight: boolean;
+  state: CellState
 }

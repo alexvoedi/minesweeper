@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from "vue";
-import DifficultyButtons from './components/DifficultyButtons.vue';
-import StatsBar from './components/StatsBar.vue';
+import { CellState } from './interfaces/CellState';
 import { Cell } from './interfaces/Cell';
 import { GameTimer } from './interfaces/GameTimer';
 import { Settings } from './interfaces/Settings';
+import DifficultyButtons from './components/DifficultyButtons.vue';
+import StatsBar from './components/StatsBar.vue';
 
 const settings = reactive<Settings>({
   width: 9,
@@ -31,21 +32,20 @@ const initGame = ({ width, height, mines }: Settings) => {
   timer.value.current = new Date();
 
   cells.value = [];
-  for (let i = 0; i < width; i++) {
-    for (let j = 0; j < height; j++) {
-      cells.value[j * width + i] = {
-        id: j * width + i,
-        open: false,
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      cells.value[y * width + x] = {
+        x, y,
         mine: false,
-        marked: false,
         highlight: false,
+        state: CellState.Close
       };
     }
   }
 };
 
 const checkWinCondition = () => {
-  const openCells = cells.value.filter((cell) => cell.open);
+  const openCells = cells.value.filter((cell) => cell.state === CellState.Open);
 
   if (openCells.length === (settings.width * settings.height - settings.mines)) {
     clearInterval(timer.value.id);
@@ -59,9 +59,9 @@ const gridStyle = computed(() => ({
 }));
 
 const openCell = (cell: Cell) => {
-  if (cell.open || cell.marked) return;
+  if (cell.state !== CellState.Close) return;
 
-  cell.open = true;
+  cell.state = CellState.Open;
 
   if (firstCell.value) {
     populateMines();
@@ -88,53 +88,45 @@ const openCell = (cell: Cell) => {
   checkWinCondition();
 };
 
-const tick = () => {
-  timer.value.current = new Date();
-};
+const tick = () => timer.value.current = new Date()
 
 const populateMines = () => {
   firstCell.value = false;
 
-  const closedCells = cells.value.filter((cell) => !cell.open);
+  const closedCells = cells.value.filter((cell) => cell.state !== CellState.Open);
 
   let i = 0;
-
   while (i < settings.mines) {
     const randomCell =
       closedCells[Math.floor(Math.random() * closedCells.length)];
 
-    if (!randomCell.mine) {
-      randomCell.mine = true;
-      i++;
-    }
+    if (randomCell.mine) continue;
+
+    randomCell.mine = true;
+    i++;
   }
 };
 
 const openAllCells = () => {
-  cells.value.forEach((cell) => (cell.open = true));
+  cells.value.forEach((cell) => (cell.state = CellState.Open));
 };
 
 const markCell = (cell: Cell) => {
-  if (cell.open) return;
+  if (cell.state === CellState.Open) return;
 
-  cell.marked = !cell.marked;
+  if      (cell.state === CellState.Close)        cell.state = CellState.Flag
+  else if (cell.state === CellState.Flag)         cell.state = CellState.Questionmark
+  else if (cell.state === CellState.Questionmark) cell.state = CellState.Close
 };
 
 const getAdjacentCells = (cell: Cell) => {
-  const adjacentCells: Cell[] = [];
+  const { x, y } = cell
 
-  const x = cell.id % settings.width;
-  const y = Math.floor(cell.id / settings.width);
+  const adjacentCells: Cell[] = [];
 
   for (let i = -1; i <= 1; i++) {
     for (let j = -1; j <= 1; j++) {
-      if (
-        (i !== 0 || j !== 0) &&
-        x + i >= 0 &&
-        x + i < settings.width &&
-        y + j >= 0 &&
-        y + j < settings.height
-      ) {
+      if ((i !== 0 || j !== 0) && checkIfInBounds(x + i, y + j)) {
         const cell = getCell(x + i, y + j);
 
         adjacentCells.push(cell);
@@ -146,14 +138,12 @@ const getAdjacentCells = (cell: Cell) => {
 };
 
 const markedCellsCount = computed(
-  () => cells.value.filter((cell) => cell.marked).length
+  () => cells.value.filter((cell) => cell.state === CellState.Flag).length
 );
 
 const getAdjacentCellsMineCount = (cell: Cell) => {
   const adjacentCells = getAdjacentCells(cell);
-
   const adjacentCellsWithMines = adjacentCells.filter((cell) => cell.mine);
-
   return adjacentCellsWithMines.length;
 };
 
@@ -165,38 +155,35 @@ const highlightSurroundingCells = (cell: Cell) => {
   const adjacentCells = getAdjacentCells(cell);
 
   adjacentCells
-    .filter((cell) => !cell.marked)
+    .filter((cell) => cell.state === CellState.Close || cell.state === CellState.Questionmark)
     .forEach((cell) => (cell.highlight = true));
 };
+
+const checkIfInBounds = (x: number, y: number) => x >= 0 && y >= 0 && x < settings.width && y < settings.height
 
 const openSurroundingCells = (cell: Cell) => {
   cells.value.forEach((cell) => (cell.highlight = false));
 
-  if (!cell.open) return;
+  if (cell.state !== CellState.Open) return;
 
   const adjacentCells = getAdjacentCells(cell);
 
-  const markedAdjacentCells = adjacentCells.filter(
-    (cell) => cell.marked && !cell.open
+  const flaggedAdjacentCells = adjacentCells.filter(
+    (cell) => cell.state === CellState.Flag
   );
   const adjacentCellsWithMines = adjacentCells.filter((cell) => cell.mine);
 
-  if (markedAdjacentCells.length === adjacentCellsWithMines.length) {
-    const x = cell.id % settings.width;
-    const y = Math.floor(cell.id / settings.width);
+  if (flaggedAdjacentCells.length === adjacentCellsWithMines.length) {
+    const { x, y } = cell
 
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
-        if (
-          (i !== 0 || j !== 0) &&
-          x + i >= 0 &&
-          x + i < settings.width &&
-          y + j >= 0 &&
-          y + j < settings.height
-        ) {
+        if (i === 0 && j === 0) continue;
+
+        if (checkIfInBounds(x + i, y + i)) {
           const cell = getCell(x + i, y + j);
 
-          if (!cell.marked && !cell.open) openCell(cell);
+          if (!(cell.state === CellState.Flag) && !(cell.state === CellState.Open)) openCell(cell);
         }
       }
     }
@@ -222,22 +209,18 @@ const elapsedTime = computed(() => (timer.value.current.getTime() - timer.value.
         <div
           class="grid items-center justify-items-center cursor-pointer"
           :style="gridStyle"
-          @click.prevent=""
-          @mousedown.middle.prevent=""
-          @mouseup.middle.prevent=""
-          @contextmenu.prevent=""
+          @click.prevent
+          @mousedown.middle.prevent
+          @mouseup.middle.prevent
+          @contextmenu.prevent
         >
-          <template v-for="(cell, index) in cells" :key="index">
+          <template v-for="cell in cells" :key="cell.id">
             <button
-              class="
-                btn btn-sm btn-square
-                rounded-none
-                transition-none
-                border-gray-500
-              "
+              class="btn btn-sm btn-square rounded-none transition-none border-gray-500"
               :class="{
-                open: cell.open,
-                marked: cell.marked,
+                open: cell.state === CellState.Open,
+                questionmark: cell.state === CellState.Questionmark,
+                flag: cell.state === CellState.Flag,
                 highlight: cell.highlight,
               }"
               :disabled="gameOver"
@@ -246,31 +229,38 @@ const elapsedTime = computed(() => (timer.value.current.getTime() - timer.value.
               @mouseup.middle.prevent="openSurroundingCells(cell)"
               @contextmenu.prevent="markCell(cell)"
             >
-              <span v-if="cell.open" class="text-black">
-                <template v-if="!cell.mine">
-                  <template v-if="getAdjacentCellsMineCount(cell) > 0">
-                    {{ getAdjacentCellsMineCount(cell) }}
-                  </template>
+              <span v-if="cell.state === CellState.Open" class="text-black">
+                <template v-if="cell.mine">
+                  <span v-if="gameOver" text="color-red-500">💥</span>
+                  <span v-else text="color-red-500">💣</span>
                 </template>
-                <template v-else>
-                  <span text="color-red-500"> 💣 </span>
-                </template>
+
+                <template
+                  v-else-if="getAdjacentCellsMineCount(cell) > 0"
+                >{{ getAdjacentCellsMineCount(cell) }}</template>
               </span>
-              <span v-else-if="cell.marked" class="">
-                🚩
-              </span>
+              <span v-else-if="cell.state === CellState.Questionmark" class>❓</span>
+              <span v-else-if="cell.state === CellState.Flag" class>🚩</span>
             </button>
           </template>
         </div>
       </div>
 
-      <StatsBar :elapsedTime="elapsedTime" :markedCellsCount="markedCellsCount" :mines="settings.mines"></StatsBar>
+      <StatsBar
+        :elapsedTime="elapsedTime"
+        :markedCellsCount="markedCellsCount"
+        :mines="settings.mines"
+      ></StatsBar>
     </div>
   </div>
 </template>
 
 <style lang="postcss" scoped>
-.marked {
+.questionmark {
+
+}
+
+.flag {
   @apply bg-red-800 hover:bg-red-800;
 }
 
