@@ -1,105 +1,10 @@
-<template>
-  <div class="p-4 max-w-screen-lg mx-auto">
-    <div class="grid grid-cols-1 gap-5">
-      <div class="card bg-gray-600 text-white compact shadow-lg p-5">
-        <div class="card-title">
-          <h1 class="font-medium text-3xl">Minesweeper</h1>
-          <h2 class="font-light">A simple Minesweeper game</h2>
-        </div>
-      </div>
-
-      <DifficultyButtons @init-game="initGame"></DifficultyButtons>
-
-      <div class="mx-auto">
-        <div
-          class="grid items-center justify-items-center cursor-pointer"
-          :style="gridStyle"
-          @click.prevent=""
-          @mousedown.middle.prevent=""
-          @mouseup.middle.prevent=""
-          @contextmenu.prevent=""
-        >
-          <template v-for="(cell, index) in cells" :key="index">
-            <button
-              class="
-                btn btn-sm btn-square
-                rounded-none
-                transition-none
-                border-gray-500
-              "
-              :class="{
-                open: cell.open,
-                marked: cell.marked,
-                highlight: cell.highlight,
-              }"
-              :disabled="gameOver"
-              @mouseup.left.prevent="openCell(cell)"
-              @mousedown.middle.prevent="highlightSurroundingCells(cell)"
-              @mouseup.middle.prevent="openSurroundingCells(cell)"
-              @contextmenu.prevent="markCell(cell)"
-            >
-              <span v-if="cell.open" class="text-black">
-                <template v-if="!cell.mine">
-                  <template v-if="getAdjacentCellsMineCount(cell) > 0">
-                    {{ getAdjacentCellsMineCount(cell) }}
-                  </template>
-                </template>
-                <template v-else>
-                  <span text="color-red-500"> 💣 </span>
-                </template>
-              </span>
-              <span v-else-if="cell.marked" class="">
-                🚩
-              </span>
-            </button>
-          </template>
-        </div>
-      </div>
-
-      <div class="stats w-full">
-        <div class="stat place-items-center place-content-center gap-x-0">
-          <div class="stat-title">Time</div>
-          <div class="stat-value text-center font-mono">
-            {{ (timer.elapsed / 1000).toFixed(3) }}
-          </div>
-          <div class="stat-desc">Seconds</div>
-        </div>
-
-        <div class="stat place-items-center place-content-center gap-x-0">
-          <div class="stat-title">Marked</div>
-          <div
-            class="stat-value text-center font-mono"
-            :class="{
-              'text-success': markedCellsCount <= settings.mines,
-              'text-error': markedCellsCount > settings.mines,
-            }"
-          >
-            {{ markedCellsCount }}
-          </div>
-          <div class="stat-desc">Mines</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed, reactive, ref } from "vue";
 import DifficultyButtons from './components/DifficultyButtons.vue';
-
-interface Cell {
-  id: number;
-  open: boolean;
-  mine: boolean;
-  marked: boolean;
-  highlight: boolean;
-}
-
-interface Settings {
-  width: number;
-  height: number;
-  mines: number;
-}
+import StatsBar from './components/StatsBar.vue';
+import { Cell } from './interfaces/Cell';
+import { GameTimer } from './interfaces/GameTimer';
+import { Settings } from './interfaces/Settings';
 
 const settings = reactive<Settings>({
   width: 9,
@@ -110,16 +15,10 @@ const settings = reactive<Settings>({
 const cells = ref<Cell[]>([]);
 const firstCell = ref<boolean>(true);
 const gameOver = ref<boolean>(false);
-const timer = ref<{
-  id: number;
-  start: Date;
-  current: Date;
-  elapsed: number;
-}>({
+const timer = ref<GameTimer>({
   id: 0,
   start: new Date(),
   current: new Date(),
-  elapsed: 0,
 });
 
 const initGame = ({ width, height, mines }: Settings) => {
@@ -130,7 +29,6 @@ const initGame = ({ width, height, mines }: Settings) => {
 
   timer.value.start = new Date();
   timer.value.current = new Date();
-  timer.value.elapsed = 0;
 
   cells.value = [];
   for (let i = 0; i < width; i++) {
@@ -192,8 +90,6 @@ const openCell = (cell: Cell) => {
 
 const tick = () => {
   timer.value.current = new Date();
-  timer.value.elapsed =
-    timer.value.current.getTime() - timer.value.start.getTime();
 };
 
 const populateMines = () => {
@@ -306,7 +202,72 @@ const openSurroundingCells = (cell: Cell) => {
     }
   }
 };
+
+const elapsedTime = computed(() => (timer.value.current.getTime() - timer.value.start.getTime()) / 1000)
 </script>
+
+<template>
+  <div class="p-4 max-w-screen-lg mx-auto">
+    <div class="grid grid-cols-1 gap-5">
+      <div class="card bg-gray-600 text-white compact shadow-lg p-5">
+        <div class="card-title">
+          <h1 class="font-medium text-3xl">Minesweeper</h1>
+          <h2 class="font-light">A simple Minesweeper game</h2>
+        </div>
+      </div>
+
+      <DifficultyButtons @init-game="initGame"></DifficultyButtons>
+
+      <div class="mx-auto">
+        <div
+          class="grid items-center justify-items-center cursor-pointer"
+          :style="gridStyle"
+          @click.prevent=""
+          @mousedown.middle.prevent=""
+          @mouseup.middle.prevent=""
+          @contextmenu.prevent=""
+        >
+          <template v-for="(cell, index) in cells" :key="index">
+            <button
+              class="
+                btn btn-sm btn-square
+                rounded-none
+                transition-none
+                border-gray-500
+              "
+              :class="{
+                open: cell.open,
+                marked: cell.marked,
+                highlight: cell.highlight,
+              }"
+              :disabled="gameOver"
+              @mouseup.left.prevent="openCell(cell)"
+              @mousedown.middle.prevent="highlightSurroundingCells(cell)"
+              @mouseup.middle.prevent="openSurroundingCells(cell)"
+              @contextmenu.prevent="markCell(cell)"
+            >
+              <span v-if="cell.open" class="text-black">
+                <template v-if="!cell.mine">
+                  <template v-if="getAdjacentCellsMineCount(cell) > 0">
+                    {{ getAdjacentCellsMineCount(cell) }}
+                  </template>
+                </template>
+                <template v-else>
+                  <span text="color-red-500"> 💣 </span>
+                </template>
+              </span>
+              <span v-else-if="cell.marked" class="">
+                🚩
+              </span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <StatsBar :elapsedTime="elapsedTime" :markedCellsCount="markedCellsCount" :mines="settings.mines"></StatsBar>
+    </div>
+  </div>
+</template>
 
 <style lang="postcss" scoped>
 .marked {
