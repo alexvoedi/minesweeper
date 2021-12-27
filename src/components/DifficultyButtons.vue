@@ -21,6 +21,7 @@ defineEmits([
           <div>Beginner</div>
           <div class="font-light normal-case">9x9 - 10 Mines</div>
         </button>
+
         <button
           class="
             btn btn-primary
@@ -36,6 +37,7 @@ defineEmits([
           <div>Intermediate</div>
           <div class="font-light normal-case">16x16 - 40 Mines</div>
         </button>
+
         <button
           class="
             btn btn-primary
@@ -51,7 +53,8 @@ defineEmits([
           <div>Expert</div>
           <div class="font-light normal-case">30x16 - 99 Mines</div>
         </button>
-        <button
+
+        <!-- <button
           class="
             btn btn-secondary
             transform
@@ -65,7 +68,7 @@ defineEmits([
         >
           <div>Custom</div>
           <div class="font-light normal-case">Define your own game</div>
-        </button>
+        </button> -->
       </div>
 </template>
 
