@@ -5,7 +5,7 @@ defineEmits([
 </script>
 
 <template>
-  <div class="grid grid-cols-4 gap-5">
+  <div class="grid grid-cols-3 gap-5">
         <button
           class="
             btn btn-primary

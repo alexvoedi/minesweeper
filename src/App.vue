@@ -6,6 +6,7 @@ import { GameTimer } from './interfaces/GameTimer';
 import { Settings } from './interfaces/Settings';
 import DifficultyButtons from './components/DifficultyButtons.vue';
 import StatsBar from './components/StatsBar.vue';
+import CellButton from './components/CellButton.vue';
 
 const settings = reactive<Settings>({
   width: 9,
@@ -114,8 +115,8 @@ const openAllCells = () => {
 const markCell = (cell: Cell) => {
   if (cell.state === CellState.Open) return;
 
-  if      (cell.state === CellState.Close)        cell.state = CellState.Flag
-  else if (cell.state === CellState.Flag)         cell.state = CellState.Questionmark
+  if (cell.state === CellState.Close) cell.state = CellState.Flag
+  else if (cell.state === CellState.Flag) cell.state = CellState.Questionmark
   else if (cell.state === CellState.Questionmark) cell.state = CellState.Close
 };
 
@@ -215,33 +216,17 @@ const elapsedTime = computed(() => (timer.value.current.getTime() - timer.value.
           @contextmenu.prevent
         >
           <template v-for="cell in cells" :key="cell.id">
-            <button
-              class="btn btn-sm btn-square rounded-none transition-none border-gray-500"
-              :class="{
-                open: cell.state === CellState.Open,
-                questionmark: cell.state === CellState.Questionmark,
-                flag: cell.state === CellState.Flag,
-                highlight: cell.highlight,
+            <CellButton
+              :cell="cell"
+              :actions="{
+                openCell,
+                highlightSurroundingCells,
+                openSurroundingCells,
+                markCell
               }"
               :disabled="gameOver"
-              @mouseup.left.prevent="openCell(cell)"
-              @mousedown.middle.prevent="highlightSurroundingCells(cell)"
-              @mouseup.middle.prevent="openSurroundingCells(cell)"
-              @contextmenu.prevent="markCell(cell)"
-            >
-              <span v-if="cell.state === CellState.Open" class="text-black">
-                <template v-if="cell.mine">
-                  <span v-if="gameOver" text="color-red-500">💥</span>
-                  <span v-else text="color-red-500">💣</span>
-                </template>
-
-                <template
-                  v-else-if="getAdjacentCellsMineCount(cell) > 0"
-                >{{ getAdjacentCellsMineCount(cell) }}</template>
-              </span>
-              <span v-else-if="cell.state === CellState.Questionmark" class>❓</span>
-              <span v-else-if="cell.state === CellState.Flag" class>🚩</span>
-            </button>
+              :value="getAdjacentCellsMineCount(cell)"
+            ></CellButton>
           </template>
         </div>
       </div>
@@ -256,19 +241,4 @@ const elapsedTime = computed(() => (timer.value.current.getTime() - timer.value.
 </template>
 
 <style lang="postcss" scoped>
-.questionmark {
-
-}
-
-.flag {
-  @apply bg-red-800 hover:bg-red-800;
-}
-
-.highlight {
-  @apply bg-gray-400 border-gray-400;
-}
-
-.open {
-  @apply btn-outline;
-}
 </style>
