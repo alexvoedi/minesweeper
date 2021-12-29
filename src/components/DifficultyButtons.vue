@@ -32,22 +32,6 @@ const options = [
         class="font-light normal-case"
       >{{ settings.width }}x{{ settings.height }} - {{ settings.mines }} Mines</div>
     </button>
-
-    <!-- <button
-          class="
-            btn btn-secondary
-            transform
-            hover:shadow-md
-            btn-block
-            block
-            h-auto
-            py-3
-          "
-          disabled
-        >
-          <div>Custom</div>
-          <div class="font-light normal-case">Define your own game</div>
-    </button>-->
   </div>
 </template>
 
