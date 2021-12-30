@@ -181,7 +181,7 @@ const openSurroundingCells = (cell: Cell) => {
       for (let j = -1; j <= 1; j++) {
         if (i === 0 && j === 0) continue;
 
-        if (checkIfInBounds(x + i, y + i)) {
+        if (checkIfInBounds(x + i, y + j)) {
           const cell = getCell(x + i, y + j);
 
           if (!(cell.state === CellState.Flag) && !(cell.state === CellState.Open)) openCell(cell);
