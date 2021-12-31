@@ -127,10 +127,10 @@ const getAdjacentCells = (cell: Cell) => {
 
   for (let i = -1; i <= 1; i++) {
     for (let j = -1; j <= 1; j++) {
-      if ((i !== 0 || j !== 0) && checkIfInBounds(x + i, y + j)) {
+      if ((i !== 0 || j !== 0)) {
         const cell = getCell(x + i, y + j);
 
-        adjacentCells.push(cell);
+        if (cell) adjacentCells.push(cell);
       }
     }
   }
